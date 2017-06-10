@@ -3,5 +3,78 @@
 ```{r}
 library(overseer)
 library(mrgsolve)
+library(PKPDmisc)
+library(tidyverse)
+```
+
+```{r}
+models <- source("../models/models.R")$value
+mod_list <- set_names(map(models$available(), ~models$use(.x)) , models$available())
+```
+
+```{r}
+see(mod_list$inf_wt)
+```
+
+```{r}
+id_data <- data_frame(
+  ID = 1:10,
+  time = 0,
+  amt = 1000,
+  ii = 12,
+  addl = 8,
+  dose = amt,
+  cmt = 1,
+  evid = 1, 
+  rate = -2
+) %>%
+  mutate(WT = round(runif(n(), 40, 100), 1))
+```
+
+
+```{r }
+sim_output <- mod_list$inf_wt %>% 
+  data_set(id_data) %>%
+  mrgsim(end = 12*8 + 12)
+
+sim_output
+```
+
+```{r}
+sim_data <- sim_output %>% 
+  as_data_frame() 
+
+sim_data %>%
+  ggplot(aes(x = time, y = CP, group = ID, color = WT)) + 
+  geom_line() +
+  geom_point()
+```
+
+```{r}
+obs_times <- 0:9 %>% map(~.x*12 +c(0, 1, 3, 8)) %>% unlist %>%
+  unique
+obs_times <- obs_times[order(obs_times)]
+```
+
+```{r}
+output_data <- sim_data %>% 
+  filter(time %in% obs_times)
+```
+
+
+```{r}
+output_data %>%
+  split(.$ID) %>% 
+  map(function(.x){
+    .x %>%
+      ggplot(aes(x = time, y = CP, group = ID)) +
+      geom_line() +
+      geom_point(aes(x = DV)) + 
+      facet_wrap(~ID)
+  })
+```
+
+```{r}
+devtools::session_info()
 ```
 
