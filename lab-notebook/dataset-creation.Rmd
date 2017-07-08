@@ -3,8 +3,9 @@
 ```{r}
 library(overseer)
 library(mrgsolve)
-library(PKPDmisc)
+# library(PKPDmisc)
 library(tidyverse)
+library(rstan)
 ```
 
 ```{r}
@@ -18,7 +19,7 @@ see(mod_list$inf_wt)
 
 ```{r}
 id_data <- data_frame(
-  ID = 1:10,
+  ID = 1:50,
   time = 0,
   amt = 1000,
   ii = 12,
@@ -78,3 +79,50 @@ output_data %>%
 devtools::session_info()
 ```
 
+```{r}
+for_stan <- output_data %>% 
+  distinct(ID, time, .keep_all = TRUE) %>%
+  select(ID, time, DV, WT) %>%
+  left_join(id_data %>% select(-dose)) %>%
+  replace_na(list(amt = 0, ii = 0, addl = 0, cmt = 2, evid = 0)) %>%
+  mutate(rate = amt) %>%
+mutate(
+  DV = round(DV, 2),
+  rate = amt,
+  ss= 0
+)
+
+single_obs <- for_stan %>%
+  summarise(
+    nt = n(),
+    nSubjects = n_distinct(ID),
+    nObs = sum(ifelse(evid == 0, 1, 0))
+  )
+
+single_obs %>% as.list()
+
+first_last <- for_stan %>%
+  mutate(index = row_number()) %>%
+  group_by(ID) %>%
+  summarize(first = first(index),
+            last = last(index)) %>%
+  select(-ID) %>% as.list
+
+df_data <- for_stan %>% as.list
+
+Obs <- for_stan %>%
+  mutate(index = row_number()) %>%
+  filter(evid == 0) %>%
+  select(iObs = index, cObs = DV) %>% as.list
+
+
+data <- c(single_obs, first_last, df_data, Obs)
+
+with(data, stan_rdump(ls(data), file = "stan_data.R"))
+
+# save the file in the model directory
+modelName <- "oneCptPop"
+projectDir <- dirname(getwd())
+with(data, stan_rdump(ls(data), file = file.path(projectDir, "stanModel", paste0(modelName, ".data.R"))))
+
+```
