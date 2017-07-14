@@ -1,9 +1,9 @@
 # dev: edit r script which generates the data
-
 rm(list = ls())
 gc()
 
 modelName <- "oneCptPop"
+# modelName <- "TwoCptModelPopulation"
 
 ## directory paths, assuming we are in the lab-notebook
 ## directory.
@@ -32,19 +32,38 @@ nSubjects <- 50
 init <- function()
   list(CLHat = exp(rnorm(1, log(10), 0.2)),
        VHat = exp(rnorm(1, log(70), 0.2)),
-       sigma_add = runif(1, 0.5, 2),
-       sigma_prop = runif(1, 0.05, 1),
+       sigma = runif(1, 0.5, 2),
+       sigma_prop = runif(1, 0.5, 2),
        L = diag(nIIV),
        etaStd = matrix(rep(0, nIIV * nSubjects), nrow = nIIV),
        omega = runif(nIIV, 0.5, 2))
 
+# nIIV <- 5
+# nSubjects <- 50
+# init <- function()
+#   list(CLHat = exp(rnorm(1, log(10), 0.2)),
+#        QHat = exp(rnorm(1, log(20), 0.2)),
+#        V1Hat = exp(rnorm(1, log(70), 0.2)),
+#        V2Hat = exp(rnorm(1, log(70), 0.2)),
+#        kaHat = exp(rnorm(1, log(1), 0.2)),
+#        sigma = runif(1, 0.5, 2),
+#        L = diag(nIIV),
+#        etaStd = matrix(rep(0, nIIV * nSubjects), nrow = nIIV),
+#        omega = runif(nIIV, 0.5, 2),
+#        logtheta = matrix(rep(log(c(exp(rnorm(1, log(10), 0.2)),
+#                                    exp(rnorm(1, log(20), 0.2)),
+#                                    exp(rnorm(1, log(70), 0.2)),
+#                                    exp(rnorm(1, log(70), 0.2)),
+#                                    exp(rnorm(1, log(1), 0.2)))),
+#                              ea = nSubjects),
+#                          nrow = nSubjects))
 
 ###############################################################################
 ## run stan
 nChains <- 1  # 4
 chains <- 1:nChains
-nPost <- 10  # 1000
-nBurn <- 10  # 1000
+nPost <- 1  # 1000
+nBurn <- 0  # 1000
 nThin <- 1
 
 nIter <- nPost * nThin

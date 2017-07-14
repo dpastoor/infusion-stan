@@ -80,7 +80,7 @@ devtools::session_info()
 ```
 
 ```{r}
-for_stan <- output_data %>% 
+for_stan <- output_data %>%
   distinct(ID, time, .keep_all = TRUE) %>%
   select(ID, time, DV, WT) %>%
   left_join(id_data %>% select(-dose)) %>%
@@ -117,7 +117,8 @@ Obs <- for_stan %>%
 
 
 data <- c(single_obs, first_last, df_data, Obs)
-
+data$cmt[1] <- 2  # in Torsten, the first compartment is the gut.
+                  # The central compartment will the be the second one.
 with(data, stan_rdump(ls(data), file = "stan_data.R"))
 
 # save the file in the model directory
